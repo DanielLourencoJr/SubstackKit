@@ -123,7 +123,7 @@ export async function run(positional) {
     includeNotes: includeNotes && notes.length > 0
   });
   console.log(
-    `Converted: ${result.posts} post .md + ${result.notes} note file(s) to ${mdDir}`
+    `Converted: ${result.posts} article .md + ${result.notes} note file(s) to ${mdDir}/Articles and ${mdDir}/Notes`
   );
   return { outFile, mdDir, converted: result };
 }

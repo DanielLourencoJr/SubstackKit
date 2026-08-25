@@ -29,12 +29,15 @@ export async function run(positional) {
   const skipConvert = hasFlag("skip-convert");
 
   const authorDir = path.join(textsRoot, author);
+  const articlesDir = path.join(authorDir, "Articles");
   ensureDir(authorDir);
   const knownSlugs = new Set(
-    fs
-      .readdirSync(authorDir)
-      .filter((f) => f.endsWith(".md"))
-      .map((f) => f.replace(/\.md$/, ""))
+    fs.existsSync(articlesDir)
+      ? fs
+          .readdirSync(articlesDir)
+          .filter((f) => f.endsWith(".md"))
+          .map((f) => f.replace(/\.md$/, ""))
+      : []
   );
 
   console.log(`[new] ${author}: checking slugs already present (${knownSlugs.size})...`);
@@ -59,7 +62,9 @@ export async function run(positional) {
   if (skipConvert) return { outFile, posts: posts.length };
 
   const result = convertExport(data, { mdDir: authorDir, includePosts: true, includeNotes: false });
-  const mdCount = fs.readdirSync(authorDir).filter((f) => f.endsWith(".md")).length;
-  console.log(`Articles .md in ${authorDir}: ${mdCount}`);
-  return { outFile, posts: posts.length, mdDir: authorDir };
+  const mdCount = fs.existsSync(articlesDir)
+    ? fs.readdirSync(articlesDir).filter((f) => f.endsWith(".md")).length
+    : 0;
+  console.log(`Articles .md in ${articlesDir}: ${mdCount}`);
+  return { outFile, posts: posts.length, mdDir: articlesDir };
 }

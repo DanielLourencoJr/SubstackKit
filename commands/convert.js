@@ -6,7 +6,7 @@ export const description = "Converts an export JSON to Markdown (posts + notes).
 
 export const usage =
   "substack convert <export.json> [--md-dir md] [--include-meta basic|full] " +
-  "[--include-restacks true|false] [--include-posts true|false] [--no-notes]";
+  "[--include-restacks true|false] [--include-posts true|false] [--no-posts] [--no-notes]";
 
 export async function run(positional) {
   let input = positional[0] || getArg("in");
@@ -24,7 +24,7 @@ export async function run(positional) {
   const mdDir = normalizeDir(getArg("md-dir", "md"));
   const includeMeta = getArg("include-meta", "basic");
   const includeRestacks = getArg("include-restacks", "true") === "true";
-  const includePosts = getArg("include-posts", "false") === "true";
+  const includePosts = hasFlag("no-posts") ? false : getArg("include-posts", "true") === "true";
   const includeNotes = !hasFlag("no-notes");
 
   console.log(`Reading: ${input}`);

@@ -23,16 +23,20 @@ SubstackKit/
 │   ├── EXPORT_SCHEMA.md      # the standard export format
 │   └── REPLIES_API.md        # notes replies endpoint
 ├── out/                      # JSON exports (git-ignored)
-├── texts/<author>/           # .md output from `export` and `fetch-new` (posts + monthly notes)
+├── texts/<author>/           # .md output from `export` and `fetch-new`
+│   ├── Articles/             #   one .md per post, slug.md (YAML frontmatter)
+│   └── Notes/                #   notes-YYYY-MM.md, grouped by month
 ├── .env.example              # SUBSTACK_SID=<your cookie>
 └── tests/                    # offline converter tests
 ```
 
-> **Where do the `.md` files go?** `export` writes **everything** — posts and
-> `notes-YYYY-MM.md` — into `texts/<author>/` (change with `--md-dir`).
+> **Where do the `.md` files go?** `export` writes **everything** into
+> `texts/<author>/` (change with `--md-dir`): articles land in
+> `texts/<author>/Articles/` and monthly notes in `texts/<author>/Notes/`.
 > The standalone `convert` command uses `md/` by default (also changeable with
-> `--md-dir`). There is no ready-made `md/` folder in the repo: it is only
-> created when you run `convert` without `--md-dir`.
+> `--md-dir`), with the same `Articles/` + `Notes/` layout. There is no
+> ready-made `md/` folder in the repo: it is only created when you run
+> `convert` without `--md-dir`.
 
 ## Requirements
 
@@ -53,8 +57,8 @@ node bin/substack.js export <handle> --author "Name"
    full body (`GET /posts/by-id/{id}`).
 3. Downloads notes + recursive threaded replies.
 4. Saves the standard export to `out/substack-export-<handle>-<timestamp>.json`.
-5. Converts posts to `.md` in `texts/<author>/` (YAML frontmatter) and notes to
-   `notes-YYYY-MM.md` **in the same folder** `texts/<author>/`.
+5. Converts posts to `.md` in `texts/<author>/Articles/` (YAML frontmatter) and
+   monthly notes to `texts/<author>/Notes/notes-YYYY-MM.md`.
 
 ### Convert an existing export
 
@@ -69,8 +73,8 @@ node bin/substack.js fetch-new <handle> --author "Name"
 ```
 
 Reads the publication's RSS `/feed`, compares against the slugs already in
-`texts/<author>/`, and downloads the new ones via the `window._preloads` JSON of
-each post page.
+`texts/<author>/Articles/`, and downloads the new ones via the
+`window._preloads` JSON of each post page.
 
 ### Find specific slugs
 
@@ -94,26 +98,27 @@ node bin/substack.js lookup <handle> <slug1> <slug2> ...
 | `--out`             | `out`                      | JSON export folder                           |
 | `--env`             | `.env` (repo root)         | `.env` file with `SUBSTACK_SID`              |
 | `--skip-convert`    | off                        | Export only, do not convert to `.md`         |
-| `--md-dir`          | `texts/<author>`           | Destination folder for `.md` files           |
+| `--md-dir`          | `texts/<author>`           | Root folder (articles → `Articles/`, notes → `Notes/`) |
 
 ## Flags — `convert`
 
 | Flag                 | Default                    | Description                               |
 | -------------------- | -------------------------- | ----------------------------------------- |
 | `<export.json>`      | (latest in `out/`)         | Path of the export JSON                    |
-| `--md-dir`           | `md`                       | Destination folder for `.md` files        |
+| `--md-dir`           | `md`                       | Root folder (articles → `Articles/`, notes → `Notes/`) |
 | `--include-meta`     | `basic`                    | `basic`\|`full` (notes metadata)          |
 | `--include-restacks` | `true`                     | Render restacked content in notes         |
-| `--include-posts`    | `false`                    | Also convert posts from the export        |
-| `--no-notes`         | off                        | Skip note conversion                      |
+| `--include-posts`    | `true`                     | Convert posts (use `--no-posts` to skip)   |
+| `--no-posts`         | off                        | Skip article conversion                    |
+| `--no-notes`         | off                        | Skip note conversion                       |
 
 ## Export standards
 
 | Artifact | Format |
 | -------- | ------ |
 | JSON     | `substack-export@1` — see `docs/EXPORT_SCHEMA.md` |
-| Posts `.md` | one file per post, `slug.md`, with YAML frontmatter (`title`, `slug`, `url`, `date`, `likes`, `comments`, `tags`, `language`) |
-| Notes `.md` | `notes-YYYY-MM.md`, grouped by month, with header and `---` separator between notes |
+| Articles `.md` | one file per post in `Articles/<slug>.md`, with YAML frontmatter (`title`, `slug`, `url`, `date`, `likes`, `comments`, `tags`, `language`) |
+| Notes `.md` | `Notes/notes-YYYY-MM.md`, grouped by month, with header and `---` separator between notes |
 
 Converters are verified by golden tests: notes output matches
 `SubstackScraper/notes_to_md.js` byte-for-byte.

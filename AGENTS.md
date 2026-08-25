@@ -76,7 +76,11 @@ the contract; `rawData` kept for fidelity. Full reference in
 - **Convert is a pure function of the export** — no re-download. `convertExport`
   in `lib/convert/index.js`.
 - **`fetch-new` is incremental**: compares RSS slugs against existing `.md` slugs
-  in `texts/<author>/`, then pulls each page's `window._preloads` JSON.
+  in `texts/<author>/Articles/`, then pulls each page's `window._preloads` JSON.
+- **Output layout**: `convertExport` writes posts to `<mdDir>/Articles/<slug>.md`
+  and monthly notes to `<mdDir>/Notes/notes-YYYY-MM.md` (dirs overridable via
+  `postsDir`/`notesDir` opts). `fetch-new` scans the `Articles/` subfolder for
+  known slugs.
 
 ## Files to modify
 
