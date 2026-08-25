@@ -1,0 +1,23 @@
+{
+  "name": "substack-kit",
+  "version": "1.0.0",
+  "description": "Unified downloader/export tool for Substack public data (posts, notes, replies) with a standard JSON schema and Markdown conversion.",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "substack": "./bin/substack.js"
+  },
+  "exports": {
+    ".": "./lib/index.js",
+    "./lib/*": "./lib/*.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "substack-api": "^2.0.0"
+  }
+}

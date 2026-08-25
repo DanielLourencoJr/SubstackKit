@@ -1,0 +1,69 @@
+{
+  "entity_key": "c-555",
+  "type": "comment",
+  "context": {
+    "type": "note",
+    "users": [
+      {
+        "id": 11,
+        "name": "Daniel",
+        "handle": "danielloureno1",
+        "bio": "Escreve sobre história.",
+        "primary_publication": { "id": 5, "name": "Daniel Lourenço", "subdomain": "danielloureno1" }
+      }
+    ]
+  },
+  "comment": {
+    "id": 555,
+    "name": "Daniel",
+    "handle": "danielloureno1",
+    "user_id": 11,
+    "body": "Nota de exemplo com um ponto.",
+    "body_json": {
+      "type": "doc",
+      "attrs": { "schemaVersion": "v1" },
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Nota de exemplo com " },
+            { "type": "text", "marks": [{ "type": "bold" }], "text": "destaque" },
+            { "type": "text", "text": " e um " },
+            { "type": "text", "marks": [{ "type": "link", "attrs": { "href": "https://x.com" } }], "text": "link" },
+            { "type": "text", "text": " e um @mente." }
+          ]
+        }
+      ]
+    },
+    "date": "2026-08-02T15:30:00.000Z",
+    "edited_at": null,
+    "ancestor_path": "",
+    "reaction_count": 3,
+    "reactions": { "❤": 2, "🔥": 1 },
+    "restacks": 0,
+    "children_count": 2,
+    "language": "pt",
+    "attachments": [],
+    "url": null
+  },
+  "replies": [
+    {
+      "id": 556,
+      "name": "Outro",
+      "body": "Concordo.",
+      "body_json": {
+        "type": "doc",
+        "attrs": { "schemaVersion": "v1" },
+        "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "Concordo." }] }]
+      },
+      "date": "2026-08-02T16:00:00.000Z",
+      "edited_at": null,
+      "reaction_count": 1,
+      "reactions": null,
+      "children_count": 0,
+      "depth": 0,
+      "ancestor_path": "555",
+      "attachments": []
+    }
+  ]
+}
