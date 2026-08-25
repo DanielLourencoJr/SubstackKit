@@ -9,21 +9,21 @@ const dir = path.dirname(fileURLToPath(import.meta.url));
 const post = JSON.parse(fs.readFileSync(path.join(dir, "fixtures/post.json"), "utf8"));
 
 test("htmlToMarkdown converts headings with offset", () => {
-  assert.equal(htmlToMarkdown("<h1>Título</h1>"), "## Título\n");
+  assert.equal(htmlToMarkdown("<h1>Title</h1>"), "## Title\n");
 });
 
 test("htmlToMarkdown converts inline marks and links", () => {
-  const md = htmlToMarkdown('<p>Olá <strong>mundo</strong> e <a href="https://x.com">link</a>.</p>');
-  assert.equal(md, "Olá **mundo** e [link](https://x.com).\n");
+  const md = htmlToMarkdown('<p>Hello <strong>world</strong> and <a href="https://x.com">link</a>.</p>');
+  assert.equal(md, "Hello **world** and [link](https://x.com).\n");
 });
 
 test("htmlToMarkdown converts lists", () => {
-  const md = htmlToMarkdown("<ul><li><p>Item <em>um</em></p></li><li><p>Item dois</p></li></ul>");
-  assert.equal(md, "- Item *um*\n- Item dois\n");
+  const md = htmlToMarkdown("<ul><li><p>Item <em>one</em></p></li><li><p>Item two</p></li></ul>");
+  assert.equal(md, "- Item *one*\n- Item two\n");
 });
 
 test("htmlToMarkdown converts blockquote", () => {
-  assert.equal(htmlToMarkdown("<blockquote><p>Citação.</p></blockquote>"), "> Citação.\n");
+  assert.equal(htmlToMarkdown("<blockquote><p>Quote.</p></blockquote>"), "> Quote.\n");
 });
 
 test("htmlToMarkdown converts tables", () => {
@@ -37,51 +37,51 @@ test("htmlToMarkdown converts code blocks", () => {
 });
 
 test("htmlToMarkdown drops subscription widgets", () => {
-  const md = htmlToMarkdown('<div class="subscription-widget">IGNORADO</div><p>Fim.</p>');
-  assert.equal(md, "Fim.\n");
+  const md = htmlToMarkdown('<div class="subscription-widget">IGNORED</div><p>End.</p>');
+  assert.equal(md, "End.\n");
 });
 
 test("htmlToMarkdown renders figure with caption", () => {
-  const md = htmlToMarkdown('<figure><img src="https://img/x.png" alt="x"><figcaption>Legenda</figcaption></figure>');
-  assert.equal(md, "![x](https://img/x.png)\n\n*Legenda*\n");
+  const md = htmlToMarkdown('<figure><img src="https://img/x.png" alt="x"><figcaption>Caption</figcaption></figure>');
+  assert.equal(md, "![x](https://img/x.png)\n\n*Caption*\n");
 });
 
 test("formatPost golden (frontmatter + body)", async () => {
   const { formatPost } = await import("../lib/convert/post_md.js");
   const md = formatPost(post);
   const expected = `---
-title: Exemplo de Post
-slug: exemplo-de-post
-url: "https://exemplo.substack.com/p/exemplo-de-post"
+title: Example Post
+slug: example-post
+url: "https://example.substack.com/p/example-post"
 date: "2026-08-01T12:00:00.000Z"
 likes: 4
 comments: 2
-tags: ensaio, historia
+tags: essay, history
 language: pt
 ---
 
-# Exemplo de Post
+# Example Post
 
-> Subtítulo do post
-**Publicado:** 2026-08-01 09:00:00 GMT-3  
-**URL:** https://exemplo.substack.com/p/exemplo-de-post  
-**Tags:** ensaio, historia  
-*Idioma: pt*  
-*Palavras: 120*  
+> Post subtitle
+**Published:** 2026-08-01 09:00:00 GMT-3  
+**URL:** https://example.substack.com/p/example-post  
+**Tags:** essay, history  
+*Language: pt*  
+*Words: 120*  
 **Likes:** 4  
 **Restacks:** 1  
 **Comments:** 2
 
 ![Cover](https://img/cover.png)
 
-## Título
+## Title
 
-Olá **mundo** e [link](https://x.com).
+Hello **world** and [link](https://x.com).
 
-- Item *um*
-- Item dois
+- Item *one*
+- Item two
 
-> Citação.
+> Quote.
 
 | A | B |
 | --- | --- |
@@ -93,11 +93,11 @@ const x = 1;
 
 ![x](https://img/x.png)
 
-*Legenda*
+*Caption*
 
 ---
 
-Fim.
+End.
 `;
   assert.equal(md, expected);
 });

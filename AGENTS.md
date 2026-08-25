@@ -34,9 +34,9 @@ iterator; the important calls hit the raw API directly via
 ## Key Commands
 
 ```
-node bin/substack.js export <handle> [--autor Nome] [--limit N] [--skip-convert] [--env .env]
+node bin/substack.js export <handle> [--author Name] [--limit N] [--skip-convert] [--env .env]
 node bin/substack.js convert out/<file>.json [--md-dir md] [--include-posts true]
-node bin/substack.js fetch-new <handle> --autor Nome
+node bin/substack.js fetch-new <handle> --author Name
 node bin/substack.js lookup <handle> <slug...>
 node bin/substack.js --help
 npm test    # offline unit tests (node --test tests/)
@@ -76,7 +76,7 @@ the contract; `rawData` kept for fidelity. Full reference in
 - **Convert is a pure function of the export** — no re-download. `convertExport`
   in `lib/convert/index.js`.
 - **`fetch-new` is incremental**: compares RSS slugs against existing `.md` slugs
-  in `textos/<autor>/`, then pulls each page's `window._preloads` JSON.
+  in `texts/<author>/`, then pulls each page's `window._preloads` JSON.
 
 ## Files to modify
 
@@ -90,8 +90,9 @@ the contract; `rawData` kept for fidelity. Full reference in
 
 ## Tests
 
-Golden tests assert byte-identical output vs the legacy converters. To re-verify
-against the old repos:
+Golden tests pin the converter output (notes match the legacy
+`SubstackScraper/notes_to_md.js` byte-for-byte; posts follow the Essayer format
+with English meta labels). To re-verify against the old repos:
 
 ```
 node /mnt/windows/Junior/Projects/Essayer/scripts/post_to_md.js --in out/<export>.json --md-dir /tmp/old

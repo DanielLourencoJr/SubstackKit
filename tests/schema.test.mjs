@@ -11,7 +11,7 @@ const note = JSON.parse(fs.readFileSync(path.join(dir, "fixtures/note.json"), "u
 
 test("normalizePost picks canonical fields", () => {
   const p = normalizePost(post);
-  assert.equal(p.title, "Exemplo de Post");
+  assert.equal(p.title, "Example Post");
   assert.equal(p.publishedAt, "2026-08-01T12:00:00.000Z");
   assert.equal(p.likesCount, 4);
   assert.equal(p.commentsCount, 2);

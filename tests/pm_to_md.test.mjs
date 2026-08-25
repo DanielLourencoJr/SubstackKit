@@ -19,15 +19,15 @@ test("pmToMd renders bold, italic, link, mention", () => {
           { type: "text", text: "A " },
           { type: "text", marks: [{ type: "bold" }], text: "bold" },
           { type: "text", text: " and " },
-          { type: "text", marks: [{ type: "italic" }], text: "itálico" },
+          { type: "text", marks: [{ type: "italic" }], text: "italic" },
           { type: "text", text: " and " },
           { type: "text", marks: [{ type: "link", attrs: { href: "https://x.com" } }], text: "link" },
-          { type: "substack_mention", attrs: { label: "fulano" } }
+          { type: "substack_mention", attrs: { label: "someone" } }
         ]
       }
     ]
   };
-  assert.equal(pmToMd(doc), "A **bold** and *itálico* and [link](https://x.com)@fulano\n\n");
+  assert.equal(pmToMd(doc), "A **bold** and *italic* and [link](https://x.com)@someone\n\n");
 });
 
 test("pmToMd renders lists and blockquote", () => {
@@ -37,31 +37,31 @@ test("pmToMd renders lists and blockquote", () => {
       {
         type: "bulletList",
         content: [
-          { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "um" }] }] },
-          { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "dois" }] }] }
+          { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "one" }] }] },
+          { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "two" }] }] }
         ]
       },
       {
         type: "orderedList",
         content: [
-          { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "primeiro" }] }] }
+          { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "first" }] }] }
         ]
       },
       {
         type: "blockquote",
-        content: [{ type: "paragraph", content: [{ type: "text", text: "citação" }] }]
+        content: [{ type: "paragraph", content: [{ type: "text", text: "quote" }] }]
       }
     ]
   };
   const md = pmToMd(doc);
-  assert.ok(md.includes("- um\n- dois\n"));
-  assert.ok(md.includes("1. primeiro\n"));
-  assert.ok(md.includes("> citação"));
+  assert.ok(md.includes("- one\n- two\n"));
+  assert.ok(md.includes("1. first\n"));
+  assert.ok(md.includes("> quote"));
 });
 
 test("noteBodyToMd uses ProseMirror body_json", () => {
   const md = noteBodyToMd(note);
-  assert.equal(md, "Nota de exemplo com **destaque** e um [link](https://x.com) e um @mente\\.");
+  assert.equal(md, "Example note with **highlight** and a [link](https://x.com) and a @mention\\.");
 });
 
 test("notes escaping escapes punctuation (notes standard)", () => {

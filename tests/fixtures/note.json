@@ -8,7 +8,7 @@
         "id": 11,
         "name": "Daniel",
         "handle": "danielloureno1",
-        "bio": "Escreve sobre história.",
+        "bio": "Writes about history.",
         "primary_publication": { "id": 5, "name": "Daniel Lourenço", "subdomain": "danielloureno1" }
       }
     ]
@@ -18,7 +18,7 @@
     "name": "Daniel",
     "handle": "danielloureno1",
     "user_id": 11,
-    "body": "Nota de exemplo com um ponto.",
+    "body": "Example note with a point.",
     "body_json": {
       "type": "doc",
       "attrs": { "schemaVersion": "v1" },
@@ -26,11 +26,11 @@
         {
           "type": "paragraph",
           "content": [
-            { "type": "text", "text": "Nota de exemplo com " },
-            { "type": "text", "marks": [{ "type": "bold" }], "text": "destaque" },
-            { "type": "text", "text": " e um " },
+            { "type": "text", "text": "Example note with " },
+            { "type": "text", "marks": [{ "type": "bold" }], "text": "highlight" },
+            { "type": "text", "text": " and a " },
             { "type": "text", "marks": [{ "type": "link", "attrs": { "href": "https://x.com" } }], "text": "link" },
-            { "type": "text", "text": " e um @mente." }
+            { "type": "text", "text": " and a @mention." }
           ]
         }
       ]
@@ -49,12 +49,12 @@
   "replies": [
     {
       "id": 556,
-      "name": "Outro",
-      "body": "Concordo.",
+      "name": "Someone",
+      "body": "Agree.",
       "body_json": {
         "type": "doc",
         "attrs": { "schemaVersion": "v1" },
-        "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "Concordo." }] }]
+        "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "Agree." }] }]
       },
       "date": "2026-08-02T16:00:00.000Z",
       "edited_at": null,

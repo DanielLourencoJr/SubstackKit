@@ -1,72 +1,78 @@
 # SubstackKit
 
-Downloader/exportador unificado de dados públicos do Substack (posts, notas e
-replies) usando a API interna não-oficial que o web app usa. Gera **um formato de
-export padrão** (JSON) e converte para **Markdown padrão** (posts + notas mensais).
+Unified downloader/exporter for Substack public data (posts, notes, replies) using
+the unofficial internal API the web app uses. Produces **one standard export
+format** (JSON) and converts to **standard Markdown** (posts + monthly notes).
 
-> ⚠️ Usa endpoints internos do Substack e pode quebrar a qualquer momento.
-> Apenas leitura de conteúdo público. Respeite os termos do Substack.
+> ⚠️ Uses Substack internal endpoints and may break at any time. Read-only access
+> to public content. Respect Substack's terms.
 
-Unifica o que antes vivia espalhado entre `SubstackScraper` (notas), `Essayer`
-(posts) e `SubstackAPI` (documentação da API).
+Unifies what used to live scattered across `SubstackScraper` (notes), `Essayer`
+(posts) and `SubstackAPI` (API docs).
 
-## Estrutura
+## Structure
 
 ```
 SubstackKit/
-├── bin/substack.js           # CLI unificada (subcomandos)
+├── bin/substack.js           # unified CLI (subcommands)
 ├── commands/                 # export | convert | fetch-new | lookup
-├── lib/                      # núcleo reutilizável (exportável via import)
+├── lib/                      # reusable core (importable)
 │   ├── args.js client.js profile.js posts.js notes.js enrich.js schema.js export.js
 │   └── convert/              # html_to_md.js post_md.js pm_to_md.js note_md.js
-├── docs/                     # conhecimento da API (AUTH, ENDPOINTS, API_REFERENCE, ...)
-│   ├── EXPORT_SCHEMA.md      # o formato padrão de export
-│   └── REPLIES_API.md        # endpoint de replies de notas
-├── out/                      # exports JSON (git-ignorado)
-├── textos/<autor>/           # Markdown convertido por autor (padrão Essayer)
-├── md/                       # Markdown convertido (padrão Scraper)
-├── .env.example              # SUBSTACK_SID=<seu cookie>
-└── tests/                    # testes offline dos conversores
+├── docs/                     # API knowledge (AUTH, ENDPOINTS, API_REFERENCE, ...)
+│   ├── EXPORT_SCHEMA.md      # the standard export format
+│   └── REPLIES_API.md        # notes replies endpoint
+├── out/                      # JSON exports (git-ignored)
+├── texts/<author>/           # .md output from `export` and `fetch-new` (posts + monthly notes)
+├── .env.example              # SUBSTACK_SID=<your cookie>
+└── tests/                    # offline converter tests
 ```
 
-## Requisitos
+> **Where do the `.md` files go?** `export` writes **everything** — posts and
+> `notes-YYYY-MM.md` — into `texts/<author>/` (change with `--md-dir`).
+> The standalone `convert` command uses `md/` by default (also changeable with
+> `--md-dir`). There is no ready-made `md/` folder in the repo: it is only
+> created when you run `convert` without `--md-dir`.
+
+## Requirements
 
 - Node.js 18+
-- `SUBSTACK_SID` — cookie de sessão `substack.sid` (a biblioteca exige mesmo para
-  leitura pública). Cole no `.env` (git-ignorado) ou use `--env <arquivo>`.
+- `SUBSTACK_SID` — `substack.sid` session cookie (the library requires it even
+  for public reads). Put it in `.env` (git-ignored) or use `--env <file>`.
 
-## Uso
+## Usage
 
-### Baixar tudo (posts + notas + replies) e converter
+### Download everything (posts + notes + replies) and convert
 
 ```bash
-node bin/substack.js export <handle> --autor "Nome"
+node bin/substack.js export <handle> --author "Name"
 ```
 
-1. Resolve o perfil e a fonte (publicação ou perfil).
-2. Baixa **todos** os posts (paginação automática) e enriquece com corpo completo
-   (`GET /posts/by-id/{id}`).
-3. Baixa notas + replies recursivos (threaded).
-4. Salva o export padrão em `out/substack-export-<handle>-<timestamp>.json`.
-5. Converte os posts para `.md` em `textos/<autor>/` (padrão Essayer, com
-   frontmatter YAML) e as notas em `notes-YYYY-MM.md`.
+1. Resolves the profile and its source (publication or profile).
+2. Downloads **all** posts (automatic pagination) and enriches them with the
+   full body (`GET /posts/by-id/{id}`).
+3. Downloads notes + recursive threaded replies.
+4. Saves the standard export to `out/substack-export-<handle>-<timestamp>.json`.
+5. Converts posts to `.md` in `texts/<author>/` (YAML frontmatter) and notes to
+   `notes-YYYY-MM.md` **in the same folder** `texts/<author>/`.
 
-### Converter um export existente
+### Convert an existing export
 
 ```bash
 node bin/substack.js convert out/substack-export-<handle>-<timestamp>.json --md-dir md
 ```
 
-### Baixar só posts novos (incremental)
+### Download only new posts (incremental)
 
 ```bash
-node bin/substack.js fetch-new <handle> --autor "Nome"
+node bin/substack.js fetch-new <handle> --author "Name"
 ```
 
-Lê o RSS `/feed` da publicação, compara com os slugs já presentes em
-`textos/<autor>/` e baixa os novos via `window._preloads` da página do post.
+Reads the publication's RSS `/feed`, compares against the slugs already in
+`texts/<author>/`, and downloads the new ones via the `window._preloads` JSON of
+each post page.
 
-### Localizar slugs específicos
+### Find specific slugs
 
 ```bash
 node bin/substack.js lookup <handle> <slug1> <slug2> ...
@@ -74,84 +80,84 @@ node bin/substack.js lookup <handle> <slug1> <slug2> ...
 
 ## Flags — `export`
 
-| Flag               | Default                    | Descrição                                   |
-| ------------------ | -------------------------- | ------------------------------------------- |
-| `<handle>`         | (obrigatório)              | Handle do perfil/publicação                 |
-| `--autor` / `-a`   | o próprio handle           | Nome da pasta de destino dos `.md`          |
-| `--posts` / `--no-posts` | `true`               | Inclui posts no export                       |
-| `--notes` / `--no-notes` | `true`               | Inclui notas no export                       |
-| `--no-replies`     | off (busca replies)        | Pula a busca recursiva de replies           |
-| `--no-full-bodies` | off (busca corpo completo) | Pula o enriquecimento via `/posts/by-id`    |
-| `--limit`          | `0` (todos)                | Máx. de posts/notas a baixar                |
-| `--source`         | `auto`                     | `auto`\|`publication`\|`profile`            |
-| `--dedupe`         | off                        | Descarta posts não-PT duplicados de PT      |
-| `--out`            | `out`                      | Pasta do export JSON                        |
-| `--env`            | `.env` (raiz)              | Arquivo `.env` com `SUBSTACK_SID`           |
-| `--skip-convert`   | off                        | Baixa/exporta mas não converte para `.md`   |
-| `--md-dir`         | `textos/<autor>`           | Pasta de destino dos `.md`                  |
+| Flag                | Default                    | Description                                  |
+| ------------------- | -------------------------- | -------------------------------------------- |
+| `<handle>`          | (required)                 | Profile/publication handle                   |
+| `--author` / `-a`   | the handle itself          | Name of the `.md` destination folder         |
+| `--posts` / `--no-posts` | `true`               | Include posts in the export                  |
+| `--notes` / `--no-notes` | `true`               | Include notes in the export                  |
+| `--no-replies`      | off (fetches replies)      | Skip recursive reply fetching                |
+| `--no-full-bodies`  | off (fetches full body)    | Skip enrichment via `/posts/by-id`           |
+| `--limit`           | `0` (all)                  | Max posts/notes to download                  |
+| `--source`          | `auto`                     | `auto`\|`publication`\|`profile`             |
+| `--dedupe`          | off                        | Discard non-PT posts that duplicate PT posts |
+| `--out`             | `out`                      | JSON export folder                           |
+| `--env`             | `.env` (repo root)         | `.env` file with `SUBSTACK_SID`              |
+| `--skip-convert`    | off                        | Export only, do not convert to `.md`         |
+| `--md-dir`          | `texts/<author>`           | Destination folder for `.md` files           |
 
 ## Flags — `convert`
 
-| Flag                | Default | Descrição                                  |
-| ------------------- | ------- | ------------------------------------------ |
-| `<export.json>`     | (mais recente em `out/`) | Caminho do export JSON        |
-| `--md-dir`          | `md`    | Pasta de destino dos `.md`                 |
-| `--include-meta`    | `basic` | `basic`\|`full` (metadados das notas)      |
-| `--include-restacks`| `true`  | Renderiza conteúdo restacado nas notas     |
-| `--include-posts`   | `false` | Também converte posts do export            |
-| `--no-notes`        | off     | Pula a conversão das notas                 |
+| Flag                 | Default                    | Description                               |
+| -------------------- | -------------------------- | ----------------------------------------- |
+| `<export.json>`      | (latest in `out/`)         | Path of the export JSON                    |
+| `--md-dir`           | `md`                       | Destination folder for `.md` files        |
+| `--include-meta`     | `basic`                    | `basic`\|`full` (notes metadata)          |
+| `--include-restacks` | `true`                     | Render restacked content in notes         |
+| `--include-posts`    | `false`                    | Also convert posts from the export        |
+| `--no-notes`         | off                        | Skip note conversion                      |
 
-## Padrões de export
+## Export standards
 
-| Artefato | Formato |
-| -------- | ------- |
-| JSON     | `substack-export@1` — veja `docs/EXPORT_SCHEMA.md` |
-| Posts `.md` | um arquivo por post, `slug.md`, com frontmatter YAML (`title`, `slug`, `url`, `date`, `likes`, `comments`, `tags`, `language`) |
-| Notas `.md` | `notes-YYYY-MM.md`, agrupadas por mês, com cabeçalho e separador `---` entre notas |
+| Artifact | Format |
+| -------- | ------ |
+| JSON     | `substack-export@1` — see `docs/EXPORT_SCHEMA.md` |
+| Posts `.md` | one file per post, `slug.md`, with YAML frontmatter (`title`, `slug`, `url`, `date`, `likes`, `comments`, `tags`, `language`) |
+| Notes `.md` | `notes-YYYY-MM.md`, grouped by month, with header and `---` separator between notes |
 
-Os conversores reproduzem **byte a byte** o Markdown dos fluxos anteriores
-(verificado por golden test contra `Essayer/post_to_md.js` e
-`SubstackScraper/notes_to_md.js`).
+Converters are verified by golden tests: notes output matches
+`SubstackScraper/notes_to_md.js` byte-for-byte.
 
-## Como consumir como biblioteca
+## Using it as a library
 
-O núcleo é importável:
+The core is importable:
 
 ```js
 import { resolveProfile, fetchPosts, fetchNotes, buildExport, convertExport } from "substack-kit";
 ```
 
-Veja `lib/index.js` para a API completa.
+See `lib/index.js` for the full API.
 
-## Documentação da API
+## API documentation
 
-Todo o conhecimento reverse-engineered da API interna do Substack vive em `docs/`:
+All reverse-engineered knowledge about Substack's internal API lives in `docs/`:
 
-- `AUTH.md` — cookie `substack.sid`, scopes, base URLs
-- `ENDPOINTS.md` — tabela rápida de ~130 endpoints
-- `API_REFERENCE.md` — referência detalhada com exemplos JSON
-- `CONTENT_FORMATS.md` — Tiptap (drafts) vs ProseMirror (notas)
-- `LIMITS.md` — rate limits (~60 req/min) e tamanhos
-- `REPLIES_API.md` — replies de notas
-- `EXPORT_SCHEMA.md` — o formato de export padrão
+- `AUTH.md` — `substack.sid` cookie, scopes, base URLs
+- `ENDPOINTS.md` — quick table of ~130 endpoints
+- `API_REFERENCE.md` — detailed reference with JSON examples
+- `CONTENT_FORMATS.md` — Tiptap (drafts) vs ProseMirror (notes)
+- `LIMITS.md` — rate limits (~60 req/min) and size limits
+- `REPLIES_API.md` — notes replies
+- `EXPORT_SCHEMA.md` — the standard export format
 
-## Idempotência
+## Idempotency
 
-`export` sempre sobrescreve `out/` com um novo timestamp. `fetch-new` é incremental
-por design: só baixa slugs ainda não convertidos na pasta de destino.
+`export` always writes a new timestamped file in `out/`. `fetch-new` is
+incremental by design: it only downloads slugs not yet converted in the
+destination folder.
 
-## Exemplos
+## Examples
 
 ```bash
-# Exportar + converter tudo
-node bin/substack.js export danielloureno1 --autor "Daniel"
+# Export + convert everything
+node bin/substack.js export danielloureno1 --author "Daniel"
 
-# Só os 3 posts mais recentes, sem converter
+# Only the 3 most recent posts, without converting
 node bin/substack.js export <handle> --limit 3 --skip-convert
 
-# Converter um export já salvo
+# Convert an already-saved export
 node bin/substack.js convert out/substack-export-<handle>-20260825-120000.json --md-dir md
 
-# Baixar só novos e converter para a pasta do autor
-node bin/substack.js fetch-new <handle> --autor "Nome"
+# Download only new posts and convert to the author folder
+node bin/substack.js fetch-new <handle> --author "Name"
 ```

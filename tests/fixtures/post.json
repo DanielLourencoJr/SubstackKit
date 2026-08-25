@@ -1,12 +1,12 @@
 {
   "id": 12345,
-  "slug": "exemplo-de-post",
-  "title": "Exemplo de Post",
-  "subtitle": "Subtítulo do post",
+  "slug": "example-post",
+  "title": "Example Post",
+  "subtitle": "Post subtitle",
   "post_date": "2026-08-01T12:00:00.000Z",
   "publishedAt": "2026-08-01T12:00:00.000Z",
-  "canonical_url": "https://exemplo.substack.com/p/exemplo-de-post",
-  "url": "https://exemplo.substack.com/p/exemplo-de-post",
+  "canonical_url": "https://example.substack.com/p/example-post",
+  "url": "https://example.substack.com/p/example-post",
   "reaction_count": 4,
   "comment_count": 2,
   "restacks": 1,
@@ -14,8 +14,8 @@
   "language": "pt",
   "wordcount": 120,
   "cover_image": "https://img/cover.png",
-  "postTags": ["ensaio", "historia"],
-  "truncated_body_text": "Trecho inicial...",
+  "postTags": ["essay", "history"],
+  "truncated_body_text": "Initial excerpt...",
   "source": "publication",
-  "body_html": "<h1>Título</h1>\n<p>Olá <strong>mundo</strong> e <a href=\"https://x.com\">link</a>.</p>\n<ul><li><p>Item <em>um</em></p></li><li><p>Item dois</p></li></ul>\n<blockquote><p>Citação.</p></blockquote>\n<table><tr><th>A</th><th>B</th></tr><tr><td>1</td><td>2</td></tr></table>\n<pre><code>const x = 1;</code></pre>\n<figure><img src=\"https://img/x.png\" alt=\"x\"><figcaption>Legenda</figcaption></figure>\n<div class=\"subscription-widget\">IGNORADO</div>\n<hr>\n<p>Fim.</p>"
+  "body_html": "<h1>Title</h1>\n<p>Hello <strong>world</strong> and <a href=\"https://x.com\">link</a>.</p>\n<ul><li><p>Item <em>one</em></p></li><li><p>Item two</p></li></ul>\n<blockquote><p>Quote.</p></blockquote>\n<table><tr><th>A</th><th>B</th></tr><tr><td>1</td><td>2</td></tr></table>\n<pre><code>const x = 1;</code></pre>\n<figure><img src=\"https://img/x.png\" alt=\"x\"><figcaption>Caption</figcaption></figure>\n<div class=\"subscription-widget\">IGNORED</div>\n<hr>\n<p>End.</p>"
 }

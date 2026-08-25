@@ -8,45 +8,45 @@ import { writeExport } from "../lib/export.js";
 import { convertExport } from "../lib/convert/index.js";
 
 export const description =
-  "Baixa apenas posts NOVOS de uma publicação (RSS /feed + window._preloads), " +
-  "comparando com os slugs já presentes na pasta de destino.";
+  "Downloads only NEW posts of a publication (RSS /feed + window._preloads), " +
+  "comparing against slugs already present in the destination folder.";
 
 export const usage =
-  "substack fetch-new <handle> --autor Nome [--dir textos] [--limit N] [--out out] [--env .env]";
+  "substack fetch-new <handle> --author Name [--dir texts] [--limit N] [--out out] [--env .env]";
 
 export async function run(positional) {
   const handle = positional[0] || getArg("handle");
   if (!handle) {
-    console.error(`Uso: ${usage}`);
+    console.error(`Usage: ${usage}`);
     process.exit(1);
   }
 
-  const autor = getAliasArg("autor", "a", handle);
-  const textosRoot = normalizeDir(getArg("dir", "textos"));
+  const author = getAliasArg("author", "a", handle);
+  const textsRoot = normalizeDir(getArg("dir", "texts"));
   const limit = Number(getArg("limit", "0")) || 0;
   const outDir = normalizeDir(getArg("out", "out"));
   const envFile = getArg("env", path.resolve(".env"));
   const skipConvert = hasFlag("skip-convert");
 
-  const autorDir = path.join(textosRoot, autor);
-  ensureDir(autorDir);
+  const authorDir = path.join(textsRoot, author);
+  ensureDir(authorDir);
   const knownSlugs = new Set(
     fs
-      .readdirSync(autorDir)
+      .readdirSync(authorDir)
       .filter((f) => f.endsWith(".md"))
       .map((f) => f.replace(/\.md$/, ""))
   );
 
-  console.log(`[novos] ${autor}: checando slugs já presentes (${knownSlugs.size})...`);
+  console.log(`[new] ${author}: checking slugs already present (${knownSlugs.size})...`);
   const posts = await fetchRssPreloads({ handle, knownSlugs, limit });
 
   if (!posts.length) {
-    console.log(`[novos] ${autor}: nenhum post novo.`);
+    console.log(`[new] ${author}: no new posts.`);
     return { posts: 0 };
   }
 
   const data = buildExport({
-    profile: { id: null, name: autor, handle, url: `https://${handle}.substack.com` },
+    profile: { id: null, name: author, handle, url: `https://${handle}.substack.com` },
     source: { type: "publication", slug: handle, subdomain: handle, method: "rss+preloads" },
     posts,
     notes: [],
@@ -58,8 +58,8 @@ export async function run(positional) {
 
   if (skipConvert) return { outFile, posts: posts.length };
 
-  const result = convertExport(data, { mdDir: autorDir, includePosts: true, includeNotes: false });
-  const mdCount = fs.readdirSync(autorDir).filter((f) => f.endsWith(".md")).length;
-  console.log(`Artigos .md em ${autorDir}: ${mdCount}`);
-  return { outFile, posts: posts.length, mdDir: autorDir };
+  const result = convertExport(data, { mdDir: authorDir, includePosts: true, includeNotes: false });
+  const mdCount = fs.readdirSync(authorDir).filter((f) => f.endsWith(".md")).length;
+  console.log(`Articles .md in ${authorDir}: ${mdCount}`);
+  return { outFile, posts: posts.length, mdDir: authorDir };
 }

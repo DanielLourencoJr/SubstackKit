@@ -2,7 +2,7 @@ node_modules
 .env
 out
 md
-textos
+texts
 *.log
 .DS_Store
 Thumbs.db

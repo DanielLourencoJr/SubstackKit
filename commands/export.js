@@ -10,21 +10,21 @@ import { writeExport } from "../lib/export.js";
 import { convertExport } from "../lib/convert/index.js";
 
 export const description =
-  "Baixa posts + notas (+ replies) de um perfil/publicação e exporta no formato padrão.";
+  "Downloads posts + notes (+ replies) from a profile/publication and exports in the standard format.";
 
 export const usage =
-  "substack export <handle> [--autor Nome] [--posts|--no-posts] [--notes|--no-notes] " +
+  "substack export <handle> [--author Name] [--posts|--no-posts] [--notes|--no-notes] " +
   "[--no-replies] [--no-full-bodies] [--limit N] [--source auto|publication|profile] " +
-  "[--dedupe] [--out out] [--env .env] [--skip-convert] [--md-dir textos/<autor>]";
+  "[--dedupe] [--out out] [--env .env] [--skip-convert] [--md-dir texts/<author>]";
 
 export async function run(positional) {
   const handle = positional[0] || getArg("handle");
   if (!handle) {
-    console.error(`Uso: ${usage}`);
+    console.error(`Usage: ${usage}`);
     process.exit(1);
   }
 
-  const autor = getAliasArg("autor", "a", handle);
+  const author = getAliasArg("author", "a", handle);
   const limit = Number(getArg("limit", "0")) || 0;
   const sourceArg = getArg("source", "auto");
   const includePosts = hasFlag("posts") ? true : hasFlag("no-posts") ? false : true;
@@ -35,13 +35,13 @@ export async function run(positional) {
   const outDir = normalizeDir(getArg("out", "out"));
   const envFile = getArg("env", path.resolve(".env"));
   const skipConvert = hasFlag("skip-convert");
-  const mdDir = normalizeDir(getArg("md-dir", path.join("textos", autor)));
+  const mdDir = normalizeDir(getArg("md-dir", path.join("texts", author)));
 
   const client = clientFromEnv({ envFile });
 
-  console.log(`Resolvendo perfil "${handle}"...`);
+  console.log(`Resolving profile "${handle}"...`);
   const { profile, rawProfile, source } = await resolveProfile(client, handle);
-  console.log(`Perfil: ${profile.name} (@${profile.handle}), id=${profile.id}`);
+  console.log(`Profile: ${profile.name} (@${profile.handle}), id=${profile.id}`);
 
   if (sourceArg !== "auto" && sourceArg !== source.type) {
     if (sourceArg === "profile") {
@@ -52,39 +52,45 @@ export async function run(positional) {
       source.type = "publication";
       source.method = "archive";
     } else {
-      console.error(`--source inválido: "${sourceArg}" (use auto|publication|profile)`);
+      console.error(`Invalid --source: "${sourceArg}" (use auto|publication|profile)`);
       process.exit(1);
     }
   }
 
-  console.log(`Fonte: ${source.type === "publication" ? `publicação "${source.publication.name}" (${source.subdomain}.substack.com)` : "perfil via /profile/posts"}`);
+  console.log(
+    `Source: ${
+      source.type === "publication"
+        ? `publication "${source.publication.name}" (${source.subdomain}.substack.com)`
+        : "profile via /profile/posts"
+    }`
+  );
 
   let posts = [];
   let notes = [];
 
   if (includePosts) {
-    console.log("Baixando posts...");
+    console.log("Fetching posts...");
     posts = await fetchPosts({ client, profile: rawProfile, source, limit });
     if (dedupe && posts.length) {
       posts = dedupePosts(posts);
     }
-    console.log(`Posts baixados: ${posts.length}`);
+    console.log(`Posts fetched: ${posts.length}`);
   }
 
   if (includePosts && includeFullBodies && posts.length) {
-    console.log(`Enriquecendo ${posts.length} posts com corpo completo...`);
+    console.log(`Enriching ${posts.length} posts with full body...`);
     await enrichPostBodies({ client, posts });
   }
 
   if (includeNotes) {
-    console.log("Baixando notas...");
+    console.log("Fetching notes...");
     notes = await fetchNotes({
       client,
       profile: rawProfile,
       limit,
       includeReplies
     });
-    console.log(`Notas baixadas: ${notes.length}`);
+    console.log(`Notes fetched: ${notes.length}`);
   }
 
   const data = buildExport({
@@ -103,10 +109,10 @@ export async function run(positional) {
   });
 
   const outFile = writeExport({ outDir, handle, data });
-  console.log(`Export salvo: ${outFile}`);
+  console.log(`Export saved: ${outFile}`);
 
   if (skipConvert) {
-    console.log("Conversão pulada (--skip-convert).");
+    console.log("Conversion skipped (--skip-convert).");
     return { outFile, mdFiles: [] };
   }
 
@@ -117,7 +123,7 @@ export async function run(positional) {
     includeNotes: includeNotes && notes.length > 0
   });
   console.log(
-    `Convertido: ${result.posts} posts .md + ${result.notes} arquivo(s) de notas em ${mdDir}`
+    `Converted: ${result.posts} post .md + ${result.notes} note file(s) to ${mdDir}`
   );
   return { outFile, mdDir, converted: result };
 }

@@ -2,7 +2,7 @@ import { getArg, normalizeDir, hasFlag } from "../lib/args.js";
 import { findLatestExport, readExport } from "../lib/export.js";
 import { convertExport } from "../lib/convert/index.js";
 
-export const description = "Converte um export JSON para Markdown (posts + notas).";
+export const description = "Converts an export JSON to Markdown (posts + notes).";
 
 export const usage =
   "substack convert <export.json> [--md-dir md] [--include-meta basic|full] " +
@@ -15,8 +15,8 @@ export async function run(positional) {
     input = findLatestExport(dir);
   }
   if (!input) {
-    console.error(`Uso: ${usage}`);
-    console.error("Nenhum export encontrado; passe o caminho do JSON ou use --dir <out>.");
+    console.error(`Usage: ${usage}`);
+    console.error("No export found; pass a JSON path or use --dir <out>.");
     process.exit(1);
   }
 
@@ -27,7 +27,7 @@ export async function run(positional) {
   const includePosts = getArg("include-posts", "false") === "true";
   const includeNotes = !hasFlag("no-notes");
 
-  console.log(`Lendo: ${input}`);
+  console.log(`Reading: ${input}`);
   const result = convertExport(data, {
     mdDir,
     includeMeta,
@@ -36,7 +36,7 @@ export async function run(positional) {
     includePosts
   });
   console.log(
-    `Convertido para ${mdDir}: ${result.posts} posts, ${result.notes} arquivo(s) de notas.`
+    `Converted to ${mdDir}: ${result.posts} posts, ${result.notes} note file(s).`
   );
   return result;
 }

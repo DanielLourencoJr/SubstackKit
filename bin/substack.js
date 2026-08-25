@@ -15,18 +15,18 @@ const COMMANDS = {
 
 function printHelp() {
   const lines = [
-    `substack-kit v${pkg.version} — downloader/exportador de dados públicos do Substack`,
+    `substack-kit v${pkg.version} — downloader/exporter for Substack public data`,
     "",
-    "Uso: substack <comando> [argumentos]",
+    "Usage: substack <command> [arguments]",
     "",
-    "Comandos:"
+    "Commands:"
   ];
   for (const [name, meta] of Object.entries(COMMANDS)) {
     const mod = require(meta.path);
     lines.push(`  ${name.padEnd(10)} ${mod.description}`);
   }
   lines.push("");
-  lines.push("Rode `substack <comando> --help` para flags de cada comando, ou veja README.md.");
+  lines.push("Run `substack <command> --help` for each command's flags, or see README.md.");
   console.log(lines.join("\n"));
 }
 
@@ -41,14 +41,14 @@ async function main() {
 
   const meta = COMMANDS[cmd];
   if (!meta) {
-    console.error(`Comando desconhecido: "${cmd}"`);
+    console.error(`Unknown command: "${cmd}"`);
     printHelp();
     process.exit(1);
   }
 
   const mod = require(meta.path);
   if (process.argv.includes("--help") || process.argv.includes("-h")) {
-    console.log(`Uso: ${mod.usage}`);
+    console.log(`Usage: ${mod.usage}`);
     console.log("");
     console.log(mod.description);
     return;
