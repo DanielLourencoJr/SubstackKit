@@ -10,7 +10,8 @@ const COMMANDS = {
   export: { path: "../commands/export.js" },
   convert: { path: "../commands/convert.js" },
   "fetch-new": { path: "../commands/fetch-new.js" },
-  lookup: { path: "../commands/lookup.js" }
+  lookup: { path: "../commands/lookup.js" },
+  edit: { path: "../commands/edit.js" }
 };
 
 function printHelp() {

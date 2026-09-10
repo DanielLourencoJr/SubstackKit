@@ -38,6 +38,10 @@ SubstackKit/
 > ready-made `md/` folder in the repo: it is only created when you run
 > `convert` without `--md-dir`.
 
+> **Notes pagination:** `lib/notes.js:107` bypasses `substack-api`'s `profile.notes()`
+> iterator (which silently truncated on `429`) and paginates `GET /reader/feed/profile/{id}?types=note&cursor=`
+> with `retryFetch` + `800ms` gap, so the full history is exported (e.g. `290` notes back to `2025-12`).
+
 ## Requirements
 
 - Node.js 18+
@@ -55,7 +59,9 @@ node bin/substack.js export <handle> --author "Name"
 1. Resolves the profile and its source (publication or profile).
 2. Downloads **all** posts (automatic pagination) and enriches them with the
    full body (`GET /posts/by-id/{id}`).
-3. Downloads notes + recursive threaded replies.
+3. Downloads **all** notes via direct `GET /reader/feed/profile/{id}?types=note&cursor=`
+   pagination with `429` retry + `800ms` gap (full history, e.g. 290 notes back to
+   `2025-12`) and recursive threaded replies (`GET /reader/comment/{id}/replies`).
 4. Saves the standard export to `out/substack-export-<handle>-<timestamp>.json`.
 5. Converts posts to `.md` in `texts/<author>/Articles/` (YAML frontmatter) and
    monthly notes to `texts/<author>/Notes/notes-YYYY-MM.md`.

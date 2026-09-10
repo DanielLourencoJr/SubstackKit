@@ -9,9 +9,9 @@ conversion. Merged from `SubstackScraper` (notes), `Essayer` (posts) and
 
 ## Architecture
 
-ESM Node.js (18+). Dependency: `substack-api` v2.x (profile resolution + notes
-iterator; the important calls hit the raw API directly via
-`client.substackClient.get(...)`).
+ESM Node.js (18+). Dependency: `substack-api` v2.x (profile resolution only;
+posts and notes hit the raw API directly via `client.substackClient.get(...)`
+with `retryFetch` — see `lib/notes.js:107` for the notes pagination fix).
 
 | File | Purpose |
 |---|---|
@@ -24,7 +24,7 @@ iterator; the important calls hit the raw API directly via
 | `lib/client.js` | SubstackClient factory + 429 retry/backoff + raw fetch helpers |
 | `lib/profile.js` | Handle → profile + source resolution (publication vs profile) |
 | `lib/posts.js` | Post strategies: `archive`, `profile/posts`, `rss+preloads`; enrich bodies |
-| `lib/notes.js` | Notes fetch + recursive threaded replies |
+| `lib/notes.js` | Notes fetch (direct `GET /reader/feed/profile/{id}?types=note&cursor=` with 429 retry + 800ms gap, wrapping `rawData` to `Note` shape) + recursive threaded replies |
 | `lib/enrich.js` | Optional PT-dedup of posts |
 | `lib/schema.js` | `normalizePost`/`normalizeNote`/`buildExport` (the standard schema) |
 | `lib/export.js` | Write/find/read export JSON |
@@ -69,8 +69,10 @@ the contract; `rawData` kept for fidelity. Full reference in
   unsupported node types are dropped.
 - **HTML→MD**: `htmlToMarkdown` in `lib/convert/html_to_md.js` is the single
   tokenizer (tables, lists, figures, code, widgets filtered). Used for post bodies.
-- **Rate limiting**: `retryFetch` backoff 2s→30s on 429; ~800ms between post pages,
-  ~1.2s between reply calls. Per `docs/LIMITS.md` (~60 req/min global).
+- **Rate limiting**: `retryFetch` backoff 2s→30s on 429; ~800ms between post pages
+  and note pages, ~1.2s between reply calls. Per `docs/LIMITS.md` (~60 req/min global).
+  Previous `profile.notes()` iterator swallowed 429 and truncated history at ~200
+  notes — now fixed via raw pagination (`lib/notes.js:107`).
 - **Windows paths**: scripts normalize `D:folder` → `D:\folder` automatically
   (`normalizeDir`). README examples use forward slashes.
 - **Convert is a pure function of the export** — no re-download. `convertExport`
