@@ -167,6 +167,27 @@ node bin/substack.js scheduled list [--limit 20] [--pub host] [--json]
 node bin/substack.js sync [--dir <path>] [--pub host] [--dry-run] [--yes] [--republish] [--no-pull] [--no-push] [--json]
 ```
 
+### Translations (language editions)
+
+```bash
+node bin/substack.js drafts translate <id> <language> <file.md> [--title t] [--subtitle s] [--pub host]
+```
+
+Works on **published posts**: the edition is saved as an *unpublished draft*
+translation and the live post — URL, body, subscribers — is never touched
+(the command only PUTs the draft, it never republishes). Publish the edition
+yourself from Substack's editor when it is ready; `sync` pushes translations
+of published posts the same way. On an unpublished draft the edition simply
+travels with the draft.
+
+Pushing Markdown through `create`/`update`/`translate` (and `sync`) also
+strips the export-only reading header that `convert` adds — the `# title`
+heading, the `> subtitle` blockquote, the `**Published:** …` metadata block
+and the `![Cover]` line — so it does not duplicate the title or the post
+stats inside the body (see `stripExportArtifacts` in `lib/md.js`). A
+subtitle that exists only as that blockquote, with no matching paragraph in
+the body, is moved into the subtitle field instead of being lost.
+
 ### Mentions
 
 A `@handle` is plain text unless you hand the CLI the matching Substack user.
@@ -231,6 +252,7 @@ node bin/substack.js edit <handle> <slug|id> --body-file new.md --no-publish # u
 | Rule | Why |
 | ---- | --- |
 | `create` never publishes | drafts stay private until you say so |
+| `translate` never republishes | editions on published posts stay drafts |
 | `publish` requires `--yes` | irreversible |
 | default is `--no-send` (silent) | `--send` emails all subscribers, irreversibly |
 | sync requires `--yes` to apply | `--dry-run` previews first |

@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
 import { getSid, loadEnvFile } from "../lib/auth.js";
-import { mdToTiptap } from "../lib/md.js";
+import { mdToTiptap, stripExportArtifacts } from "../lib/md.js";
 import { parseFrontmatter, stringifyFrontmatter } from "../lib/frontmatter.js";
 import {
   createDraft,
@@ -177,7 +177,7 @@ async function cmdDraftsCreate(rest, flags) {
   if (!markdown.trim()) { console.error("Markdown is empty"); process.exit(1); }
 
   if (dryRun) {
-    const doc = mdToTiptap(markdown);
+    const doc = mdToTiptap(stripExportArtifacts(markdown, { title }).markdown);
     const payload = { draft_title: title, draft_subtitle: subtitle || "", draft_body: JSON.stringify(doc), type: "newsletter", audience: finalAudience, draft_bylines: [] };
     if (wantJson) console.log(JSON.stringify({ dryRun: true, pub, payload, tiptap: doc }, null, 2));
     else { console.log(`[dry-run] pub=${pub} title="${title}" nodes=${doc.content.length} bytes=${Buffer.byteLength(payload.draft_body, "utf8")}`); console.log(JSON.stringify(payload, null, 2).slice(0, 2000)); }
@@ -309,7 +309,10 @@ async function cmdDraftsTranslate(rest, flags) {
   try {
     const data = await translateDraft({ sid, publicationUrl: pub, id, language, markdown, title, subtitle, baseDir, mentions });
     if (wantJson) console.log(JSON.stringify(data, null, 2));
-    else console.log(`✅ Draft ${id} ${data.language} translation saved: title="${data.title}"`);
+    else {
+      console.log(`✅ Draft ${id} ${data.language} translation saved: title="${data.title}"`);
+      if (data.wasPublished) console.log(`   published post → edition saved as DRAFT (live post untouched; publish it from Substack's editor)`);
+    }
   } catch (e) { console.error(`❌ drafts translate failed: ${e.message}`); process.exit(1); }
 }
 

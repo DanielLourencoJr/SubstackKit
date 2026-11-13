@@ -100,7 +100,18 @@ substack drafts update <id> ./post.md      # push new body (never publishes)
 # Published post: surgical edit
 substack edit <handle> <slug> --body-file new.md --dry-run   # preview first
 substack edit <handle> <slug> --body-file new.md --no-publish # update, stay offline
+
+# Translation edition — works on published posts too: the edition is saved
+# as an unpublished draft and the live post is never republished; the user
+# publishes it from Substack's editor when ready
+substack drafts translate <id> en ./post.en.md
 ```
+
+Exported Markdown pushed through `create`/`update`/`translate` (and `sync`)
+gets the export-only reading header stripped automatically — the `# title`
+heading, the `> subtitle` blockquote, the `**Published:** …` metadata block
+and the `![Cover]` line — so it doesn't duplicate frontmatter inside the
+body.
 
 Sync dir precedence: `--dir` → `SUBSTACK_SYNC_DIR` → `./Articles`.
 
@@ -144,7 +155,7 @@ Schedule instead: `substack drafts schedule <id> --at <ISO8601>`.
 | Edit published post | `substack edit <handle> <slug> [--dry-run]` |
 | Create draft | `substack drafts create <file.md> [--dry-run]` |
 | List/get/update draft | `substack drafts list\|get\|update` |
-| Translate edition | `substack drafts translate <id> <lang> <file.md>` |
+| Translate edition | `substack drafts translate <id> <lang> <file.md>` (published posts OK — edition stays a draft) |
 | Publish (silent/email) | `substack drafts publish <id> [--send] --yes` |
 | Schedule/unschedule | `substack drafts schedule\|unschedule <id>` |
 | Export draft → md | `substack drafts export <id> [--md-dir dir]` |

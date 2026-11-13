@@ -140,6 +140,16 @@ the contract; `rawData` kept for fidelity. Full reference in
   `SUBSTACK_SYNC_DIR` → `./Articles`.
 - **Frontmatter overrides flags are the reverse of Kit**: in write commands,
   YAML frontmatter values are used when flags are absent; CLI flags win.
+- **`drafts translate` works on published posts**: `translateDraft` PUTs the
+  draft with `translations: [edition]` and never republishes — the live post
+  stays untouched and the edition remains a draft until published by hand in
+  Substack's editor (`wasPublished` is returned for CLI messaging).
+- **Export reading artifacts are stripped on push**: `stripExportArtifacts`
+  in `lib/md.js` runs in `createDraft`/`updateDraft`/`translateDraft` and
+  removes the `convert`-generated header (`# title`, `> subtitle`,
+  `**Published:**` block, `![Cover]`) so pushed bodies don't duplicate
+  frontmatter; a stripped subtitle not repeated in the body is promoted to
+  the subtitle field.
 
 ## Files to modify
 
