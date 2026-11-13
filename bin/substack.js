@@ -14,20 +14,31 @@ const COMMANDS = {
   edit: { path: "../commands/edit.js" }
 };
 
+// Write side (merged from SubstackCLI): namespaces handled by commands/write.js.
+const WRITE_NS = new Set(["drafts", "published", "scheduled", "sync"]);
+
 function printHelp() {
   const lines = [
-    `substack-kit v${pkg.version} — downloader/exporter for Substack public data`,
+    `substack v${pkg.version} — download, read and publish Substack content`,
     "",
     "Usage: substack <command> [arguments]",
     "",
-    "Commands:"
+    "Read commands:"
   ];
   for (const [name, meta] of Object.entries(COMMANDS)) {
     const mod = require(meta.path);
     lines.push(`  ${name.padEnd(10)} ${mod.description}`);
   }
-  lines.push("");
-  lines.push("Run `substack <command> --help` for each command's flags, or see README.md.");
+  lines.push(
+    "",
+    "Write commands (upload/manage drafts and posts):",
+    "  drafts      create|list|get|update|delete|publish|schedule|unschedule|export|translate|counts",
+    "  published   list",
+    "  scheduled   list",
+    "  sync        folder ↔ publication sync (pull/push Markdown)",
+    "",
+    "Run `substack <command> --help` for each command's flags, or see README.md."
+  );
   console.log(lines.join("\n"));
 }
 
@@ -42,6 +53,12 @@ async function main() {
 
   const meta = COMMANDS[cmd];
   if (!meta) {
+    if (WRITE_NS.has(cmd)) {
+      // Write side parses the full argv itself (flags + namespaces).
+      const mod = require("../commands/write.js");
+      await mod.run();
+      return;
+    }
     console.error(`Unknown command: "${cmd}"`);
     printHelp();
     process.exit(1);

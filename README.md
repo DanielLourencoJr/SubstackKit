@@ -1,33 +1,40 @@
 # SubstackKit
 
-Unified downloader/exporter for Substack public data (posts, notes, replies) using
-the unofficial internal API the web app uses. Produces **one standard export
+Unified Substack tool: **download/export** public data (posts, notes, replies)
+using the unofficial internal API the web app uses, and **upload/manage**
+drafts and published posts (Markdown → Tiptap). Produces **one standard export
 format** (JSON) and converts to **standard Markdown** (posts + monthly notes).
 
 > ⚠️ Uses Substack internal endpoints and may break at any time. Read-only access
-> to public content. Respect Substack's terms.
+> to public content unless you use the write commands with your own credentials.
+> Respect Substack's terms.
 
 Unifies what used to live scattered across `SubstackScraper` (notes), `Essayer`
-(posts) and `SubstackAPI` (API docs).
+(posts) and `SubstackAPI` (API docs); the write side comes from `SubstackCLI`
+(archived — `substack-cli` still works as a compat alias).
 
 ## Structure
 
 ```
 SubstackKit/
-├── bin/substack.js           # unified CLI (subcommands)
-├── commands/                 # export | convert | fetch-new | lookup
+├── bin/substack.js           # unified CLI (read commands + write namespaces)
+├── bin/cli.js                # compat shim: substack-cli → write side
+├── commands/                 # export | convert | fetch-new | lookup | edit | write
 ├── lib/                      # reusable core (importable)
-│   ├── args.js client.js profile.js posts.js notes.js enrich.js schema.js export.js
+│   ├── args.js credentials.js client.js profile.js posts.js notes.js enrich.js schema.js export.js
+│   ├── auth.js md.js tiptap_convert.js frontmatter.js drafts.js images.js files.js sync.js
 │   └── convert/              # html_to_md.js post_md.js pm_to_md.js note_md.js
 ├── docs/                     # API knowledge (AUTH, ENDPOINTS, API_REFERENCE, ...)
 │   ├── EXPORT_SCHEMA.md      # the standard export format
 │   └── REPLIES_API.md        # notes replies endpoint
+├── skill/SKILL.md            # agent skill (installed to ~/.agents/skills/substack/)
+├── install.sh                # installer (deps, bin links, credentials, skill)
 ├── out/                      # JSON exports (git-ignored)
 ├── texts/<author>/           # .md output from `export` and `fetch-new`
 │   ├── Articles/             #   one .md per post, slug.md (YAML frontmatter)
 │   └── Notes/                #   notes-YYYY-MM.md, grouped by month
 ├── .env.example              # SUBSTACK_SID=<your cookie>
-└── tests/                    # offline converter tests
+└── tests/                    # offline converter + Tiptap round-trip tests
 ```
 
 > **Where do the `.md` files go?** `export` writes **everything** into
@@ -46,7 +53,23 @@ SubstackKit/
 
 - Node.js 18+
 - `SUBSTACK_SID` — `substack.sid` session cookie (the library requires it even
-  for public reads). Put it in `.env` (git-ignored) or use `--env <file>`.
+  for public reads). Resolution order (see `lib/credentials.js`): `--env <file>`
+  → shell export → `$SUBSTACK_CREDENTIALS_FILE` →
+  `~/.config/substack/credentials.env` → `<projectsRoot>/.substack-credentials.env`
+  → `<repo>/.env`. Writes default to the TEST account; MAIN is never
+  auto-selected. `install.sh` wires this up.
+
+## Install
+
+```bash
+./install.sh            # deps + ~/.local/bin/substack + credentials + skill
+./install.sh --dry-run  # show what would happen
+```
+
+The installer links `substack` (and the `substack-cli` compat alias) into
+`~/.local/bin`, points both sides at the central credential store, and
+deploys `skill/SKILL.md` to `~/.agents/skills/substack/` so agents can use
+the CLI. It is idempotent — re-run it after pulling updates.
 
 ## Usage
 
@@ -87,6 +110,132 @@ Reads the publication's RSS `/feed`, compares against the slugs already in
 ```bash
 node bin/substack.js lookup <handle> <slug1> <slug2> ...
 ```
+
+## Write side (upload & manage)
+
+> Uses undocumented `https://{pub}.substack.com/api/v1/drafts` (Tiptap JSON).
+> May break anytime. No official affiliation.
+
+### Create a draft from Markdown (never publishes)
+
+```bash
+node bin/substack.js drafts create ./post.md --pub <host>.substack.com --title "Hello" --json
+
+# dry-run: show payload without POST
+node bin/substack.js drafts create ./post.md --dry-run --json
+```
+
+Frontmatter in `post.md` overrides flags:
+
+```yaml
+---
+title: FM Title
+subtitle: FM Subtitle
+audience: only_paid
+tags: [a, b]
+---
+# Body...
+![Alt](./local.png "Caption")  # local paths auto-upload to captionedImage
+```
+
+Two or more images side by side use a gallery block (max 9; optional text
+after `:::gallery` becomes the caption for the group):
+
+```markdown
+:::gallery Pôster e trecho do mesmo autor
+![Pôster](./poster.png)
+![Trecho](./quote.png)
+:::
+```
+
+### All write commands
+
+```bash
+node bin/substack.js drafts create <file.md> [--title t] [--subtitle s] [--pub host] [--audience everyone|only_paid] [--dry-run] [--json]
+node bin/substack.js drafts list [--limit 20] [--offset 0] [--pub host] [--json]
+node bin/substack.js drafts get <id> [--pub host] [--json]
+node bin/substack.js drafts update <id> <file.md> [--title t] [--subtitle s] [--pub host]
+node bin/substack.js drafts translate <id> <language> <file.md> [--title t] [--subtitle s] [--pub host]
+node bin/substack.js drafts delete <id> [--pub host] [--yes] [--json]
+node bin/substack.js drafts publish <id> [--send|--no-send] [--yes] [--pub host] [--json]   # --no-send is silent (default)
+node bin/substack.js drafts schedule <id> --at 2027-01-01T12:00:00Z [--pub host]
+node bin/substack.js drafts unschedule <id> [--pub host]
+node bin/substack.js drafts export <id> [--output file.md] [--md-dir dir] [--pub host] [--json]
+node bin/substack.js drafts counts [--pub host] [--json]
+node bin/substack.js published list [--limit 20] [--offset 0] [--pub host] [--json]
+node bin/substack.js scheduled list [--limit 20] [--pub host] [--json]
+node bin/substack.js sync [--dir <path>] [--pub host] [--dry-run] [--yes] [--republish] [--no-pull] [--no-push] [--json]
+```
+
+### Mentions
+
+A `@handle` is plain text unless you hand the CLI the matching Substack user.
+Pass a JSON map (`--mentions mentions.json`) and the handle becomes a real
+mention chip (which notifies the user when the post goes out):
+
+```json
+{
+  "lemeiro": { "name": "Lemeiro", "id": 12345, "photo_url": "https://.../a.png" }
+}
+```
+
+Handles missing from the map stay text, as does anything inside code or after
+a word character (`a@lemeiro`). Captions are plain strings, so mentions there
+are not converted.
+
+### Folder sync
+
+Folder sync uses this precedence: `--dir <path>`, `SUBSTACK_SYNC_DIR`, then
+`./Articles`. Stores each post under its status and edition:
+
+```text
+Drafts/
+  Originals/<slug>.md
+  Translations/<language>/<slug>.md
+Published/
+  Originals/<slug>.md
+  Translations/<language>/<slug>.md
+```
+
+Translation files keep the same Substack post `id` and include
+`edition: translation` plus their language code in frontmatter. Pulls include
+custom language editions; `--no-push` gives a read-only sync that only
+organizes local files and downloads remote changes.
+
+### Publish for review, then email
+
+```bash
+# Make the post public without emailing subscribers
+node bin/substack.js drafts publish 123456789 --no-send --yes --pub <host>.substack.com
+
+# Review the public URL printed by the command, then send the existing post
+node bin/substack.js drafts publish 123456789 --send --yes --pub <host>.substack.com
+```
+
+The second command acts on the already-published post; it does not create
+another post. For translated posts, readers are shown the custom edition
+matching their device language when available.
+
+### Edit a published post (read side `edit`)
+
+```bash
+node bin/substack.js edit <handle> <slug|id> --title "New title" --dry-run   # preview
+node bin/substack.js edit <handle> <slug|id> --body-file new.md --no-publish # update, stay offline
+```
+
+`--send` emails ALL subscribers immediately and additionally requires
+`--force`; without it the edit republishes silently.
+
+### Safety
+
+| Rule | Why |
+| ---- | --- |
+| `create` never publishes | drafts stay private until you say so |
+| `publish` requires `--yes` | irreversible |
+| default is `--no-send` (silent) | `--send` emails all subscribers, irreversibly |
+| sync requires `--yes` to apply | `--dry-run` previews first |
+| writes default to the TEST account | MAIN is never auto-selected (`lib/credentials.js`) |
+| ~60 req/min global, 1 req/s safe | shared by read + write sides; see `docs/LIMITS.md` |
 
 ## Flags — `export`
 
@@ -135,6 +284,8 @@ The core is importable:
 
 ```js
 import { resolveProfile, fetchPosts, fetchNotes, buildExport, convertExport } from "substack-kit";
+// write side
+import { getSid, createDraft, updateDraft, publishDraft, syncFolder, mdToTiptap, draftToMarkdown } from "substack-kit";
 ```
 
 See `lib/index.js` for the full API.
@@ -171,4 +322,13 @@ node bin/substack.js convert out/substack-export-<handle>-20260825-120000.json -
 
 # Download only new posts and convert to the author folder
 node bin/substack.js fetch-new <handle> --author "Name"
+
+# Write side: draft from Markdown, preview, push via sync
+node bin/substack.js drafts create ./post.md --pub <host>.substack.com --dry-run --json
+node bin/substack.js drafts list --limit 5 --json
+node bin/substack.js sync --dir ./Articles --dry-run
+node bin/substack.js sync --dir ./Articles --yes
+
+# Compat alias (old SubstackCLI syntax) still works
+substack-cli drafts list --limit 5 --json
 ```
