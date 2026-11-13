@@ -125,6 +125,9 @@
 | POST | `/drafts/{id}/scheduled_release` | ✅ Yes | — | Schedule a draft (`{trigger_at, post_audience}`) |
 | GET | `/drafts/{id}/scheduled_release` | ✅ Yes | — | Get schedule info for a draft |
 | DELETE | `/drafts/{id}/scheduled_release` | ✅ Yes | — | Unschedule a draft |
+| POST | `/drafts/{id}/translations/{lang}` | ✅ Yes | — | Create a language edition (body: `{sourceLanguage}`) — see `TRANSLATIONS.md` |
+| DELETE | `/drafts/{id}/translations/{lang}` | ✅ Yes | — | Remove a language edition |
+| GET | `/posts/{id}/translate?bodyFormat=html` | ❌ No | — | **Verification endpoint**: serves the edition matching `Accept-Language` (`{translation:{<lang>:{title,…,body_html}}}`); `{}` for the primary language. Page HTML never shows editions |
 | POST | `/image` | ✅ Yes | — | Upload image (JSON Base64 data URI — NOT multipart) |
 | GET | `/notes` | ✅ Yes | cursor | Notes feed for the publication |
 | GET | `/reader/feed/profile/{profileId}?types=note` | ✅ Yes | cursor | Notes for a user profile within this publication |

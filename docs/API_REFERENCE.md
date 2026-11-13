@@ -609,6 +609,43 @@ Response includes the `id` of the new draft.
 
 Update an existing draft. Same body shape as POST. Returns full draft object.
 
+To save **language editions**, include a `translations` array of edition
+objects (`{language, draft_title, draft_subtitle, draft_body, …}`); the web
+editor sends only the editions edited in the current session ("dirty" ones).
+Editions are also readable on `GET {pub}/drafts/{id}` as `post_translations[]`
+(top-level `language` is the post's primary language). Neither the PUT nor the
+publish response echoes `post_translations` — read them back with a GET.
+See `TRANSLATIONS.md` for the full model.
+
+### POST `{pub}/drafts/{id}/translations/{lang}`
+
+Create (or fetch) the edition for `<lang>` (e.g. `en`, `es`, `pt-br`).
+Body: `{ "sourceLanguage": "<primary language of the draft>" }`. Returns
+`{ body: <edition> }`. The editor force-saves the draft before calling this.
+Requires the publication's *Additional post languages* setting to be on.
+
+### DELETE `{pub}/drafts/{id}/translations/{lang}`
+
+Remove an edition. Returns the updated draft.
+
+### GET `{pub}/posts/{id}/translate?bodyFormat=html` (public, no auth)
+
+**The verification endpoint for language editions** — this is what the
+reader-facing *Translate* button calls. Driven by the `Accept-Language`
+header (`?language=<code>` also works for well-formed codes):
+
+```json
+{ "translation": { "en": { "title": "…", "subtitle": "…", "description": "…",
+    "previewText": "…", "truncated_body_text": "…", "body_html": "…" } } }
+```
+
+- language has a **custom edition** → that edition is returned
+- requested language == post's primary language → `{}`
+- other language (auto-translate on) → machine translation
+
+⚠ The post **page HTML always renders the primary language** regardless of
+headers/params — never verify translations by fetching the page URL.
+
 ### DELETE `{pub}/drafts/{id}`
 
 Delete a draft. Returns `{success: true}`.
@@ -630,6 +667,12 @@ Publish a draft. Body:
 | `share_automatically` | bool | No | Whether to auto-share to social |
 
 Returns the published post with `slug` and `status: "published"`.
+
+⚠ No language parameter exists: republishing activates **all** language
+editions of the post (they have no independent publish state — see
+`TRANSLATIONS.md`). With `send: false` this is the safe, email-free way to
+make a newly pushed edition live; the primary body is untouched if you didn't
+edit it.
 
 ### GET `{pub}/drafts/{id}/prepublish`
 

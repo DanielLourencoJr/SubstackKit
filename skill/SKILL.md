@@ -6,10 +6,13 @@ description: >
   Use when the user asks to download/export/fetch Substack articles or notes,
   read someone's posts, review or critique an article, edit/update/republish
   one of their own posts, manage drafts, sync the Articles folder, schedule or
-  publish a post, or produce a report/summary of Substack content. Triggers:
+  publish a post, translate one of their posts / add a language edition
+  (e.g. an English version), activate or verify a translation, or produce a
+  report/summary of Substack content. Triggers:
   substack, substack article, download post, export publication, review my
   post, edit draft, publish newsletter, sync articles, substack notes,
-  substack draft, report on articles.
+  substack draft, translate post, english version, language edition,
+  publish translation, report on articles.
 ---
 
 # Substack CLI
@@ -101,10 +104,15 @@ substack drafts update <id> ./post.md      # push new body (never publishes)
 substack edit <handle> <slug> --body-file new.md --dry-run   # preview first
 substack edit <handle> <slug> --body-file new.md --no-publish # update, stay offline
 
-# Translation edition — works on published posts too: the edition is saved
-# as an unpublished draft and the live post is never republished; the user
-# publishes it from Substack's editor when ready
+# Translation edition — works on published posts too (this only PUTs the
+# draft; it never republishes and never touches the live body)
 substack drafts translate <id> en ./post.en.md
+
+# Editions have NO independent publish state (there is no per-edition
+# publish endpoint or editor button). To make an edition pushed to an
+# ALREADY-PUBLISHED post live, silently republish the post — no email goes
+# out and the primary body stays byte-identical if you didn't edit it:
+substack drafts publish <id> --no-send --yes --pub <host>.substack.com
 ```
 
 Exported Markdown pushed through `create`/`update`/`translate` (and `sync`)
@@ -112,6 +120,27 @@ gets the export-only reading header stripped automatically — the `# title`
 heading, the `> subtitle` blockquote, the `**Published:** …` metadata block
 and the `![Cover]` line — so it doesn't duplicate frontmatter inside the
 body.
+
+**Verifying a translation (important gotcha):** the post page HTML *always*
+renders the primary language — no header, query param, or cookie changes
+that — so fetching the URL falsely proves "the edition is missing". The
+ground truth is the endpoint the reader's Translate button calls:
+
+```bash
+curl -s -H 'Accept-Language: en' \
+  'https://<pub>.substack.com/api/v1/posts/<id>/translate?bodyFormat=html'
+# custom edition served  -> {"translation":{"en":{...,"body_html":"…"}}}
+# primary language       -> {}   (nothing to translate)
+# other language         -> machine translation (auto-translate)
+```
+
+Confirm it's the *custom* edition by matching a distinctive phrase from your
+source file (machine translation rarely reproduces idioms verbatim), and
+confirm the primary is untouched with
+`drafts get <id> --json | jq -r '.draft_body' | sha256sum` before/after.
+Prerequisites: publication Settings → Basics → **Additional post languages**
++ **Allow automatic translation**. Full model, API surface, troubleshooting:
+`docs/TRANSLATIONS.md`.
 
 Sync dir precedence: `--dir` → `SUBSTACK_SYNC_DIR` → `./Articles`.
 
@@ -143,6 +172,9 @@ Schedule instead: `substack drafts schedule <id> --at <ISO8601>`.
 7. Reports/summaries are the deliverable for read requests; don't run write
    commands "to check" things — `drafts list`/`drafts get`/`published list`
    are the read-only inspection tools.
+8. **Never conclude a translation is missing from a page fetch** — the post
+   page always serves the primary language. Verify with
+   `GET {pub}/api/v1/posts/<id>/translate?bodyFormat=html` + `Accept-Language`.
 
 ## Command map
 
@@ -155,7 +187,9 @@ Schedule instead: `substack drafts schedule <id> --at <ISO8601>`.
 | Edit published post | `substack edit <handle> <slug> [--dry-run]` |
 | Create draft | `substack drafts create <file.md> [--dry-run]` |
 | List/get/update draft | `substack drafts list\|get\|update` |
-| Translate edition | `substack drafts translate <id> <lang> <file.md>` (published posts OK — edition stays a draft) |
+| Translate edition | `substack drafts translate <id> <lang> <file.md>` (published posts OK; only PUTs the draft) |
+| Activate an edition | `substack drafts publish <id> --no-send --yes` (silent republish; editions have no publish state of their own) |
+| Verify a translation | `curl -H 'Accept-Language: <lang>' {pub}/api/v1/posts/<id>/translate?bodyFormat=html` — **not** the page URL |
 | Publish (silent/email) | `substack drafts publish <id> [--send] --yes` |
 | Schedule/unschedule | `substack drafts schedule\|unschedule <id>` |
 | Export draft → md | `substack drafts export <id> [--md-dir dir]` |
@@ -163,4 +197,5 @@ Schedule instead: `substack drafts schedule <id> --at <ISO8601>`.
 | Inspect publication | `substack published list` / `scheduled list` / `drafts counts` |
 
 Full flag reference: `README.md` (flag tables) and `substack <command> --help`.
-API internals: `docs/` (`AUTH`, `ENDPOINTS`, `LIMITS`, `EXPORT_SCHEMA`).
+API internals: `docs/` (`AUTH`, `ENDPOINTS`, `LIMITS`, `EXPORT_SCHEMA`,
+`TRANSLATIONS`).

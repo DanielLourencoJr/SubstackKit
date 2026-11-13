@@ -142,8 +142,14 @@ the contract; `rawData` kept for fidelity. Full reference in
   YAML frontmatter values are used when flags are absent; CLI flags win.
 - **`drafts translate` works on published posts**: `translateDraft` PUTs the
   draft with `translations: [edition]` and never republishes — the live post
-  stays untouched and the edition remains a draft until published by hand in
-  Substack's editor (`wasPublished` is returned for CLI messaging).
+  stays untouched (`wasPublished` is returned for CLI messaging). Editions
+  have **no independent publish state**: to make a pushed edition live, run a
+  silent `drafts publish <id> --no-send --yes` (no email, primary body
+  byte-identical if unedited). **Verify editions via
+  `GET {pub}/posts/{id}/translate?bodyFormat=html` + `Accept-Language` — the
+  post page HTML always renders the primary language**, so page fetches
+  falsely look like the edition is missing. Full model/gotchas:
+  `docs/TRANSLATIONS.md`.
 - **Export reading artifacts are stripped on push**: `stripExportArtifacts`
   in `lib/md.js` runs in `createDraft`/`updateDraft`/`translateDraft` and
   removes the `convert`-generated header (`# title`, `> subtitle`,
@@ -164,6 +170,8 @@ the contract; `rawData` kept for fidelity. Full reference in
 - `commands/*.js` — CLI behavior/flags. Update the flag tables in `README.md`.
 - `skill/SKILL.md` — agent-facing workflows; keep in sync with CLI changes.
 - `docs/EXPORT_SCHEMA.md` — keep in sync with `lib/schema.js`.
+- `docs/TRANSLATIONS.md` — language-edition model/API/verification; update if
+  the translation flow changes.
 
 ## Tests
 

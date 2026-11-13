@@ -173,12 +173,34 @@ node bin/substack.js sync [--dir <path>] [--pub host] [--dry-run] [--yes] [--rep
 node bin/substack.js drafts translate <id> <language> <file.md> [--title t] [--subtitle s] [--pub host]
 ```
 
-Works on **published posts**: the edition is saved as an *unpublished draft*
-translation and the live post — URL, body, subscribers — is never touched
-(the command only PUTs the draft, it never republishes). Publish the edition
-yourself from Substack's editor when it is ready; `sync` pushes translations
-of published posts the same way. On an unpublished draft the edition simply
-travels with the draft.
+Works on **published posts**: the command only PUTs the draft, so the live
+post — URL, body, subscribers — is never touched. Language editions have **no
+independent publish state** (there is no per-edition publish endpoint or
+editor button); an edition added to an already-published post goes live when
+the post itself is (re)published. Activate it silently:
+
+```bash
+node bin/substack.js drafts publish <id> --no-send --yes --pub <host>.substack.com
+```
+
+No email goes out and the primary body stays byte-identical if you didn't
+edit it. `sync` pushes translations of published posts the same way. On an
+unpublished draft the edition simply travels with the draft.
+
+**Verify with the translate endpoint, never by fetching the post page** — the
+page HTML always renders the primary language, so it looks like the edition
+is missing even when it is live:
+
+```bash
+curl -s -H 'Accept-Language: en' \
+  'https://<pub>.substack.com/api/v1/posts/<id>/translate?bodyFormat=html'
+```
+
+A custom edition comes back as `{"translation":{"en":{…,"body_html":"…"}}}`,
+the primary language returns `{}`, other languages get machine translations.
+Match a distinctive phrase from your source file to confirm it is your
+edition rather than auto-translation. Full model, API surface and
+troubleshooting: `docs/TRANSLATIONS.md`.
 
 Pushing Markdown through `create`/`update`/`translate` (and `sync`) also
 strips the export-only reading header that `convert` adds — the `# title`
@@ -234,8 +256,9 @@ node bin/substack.js drafts publish 123456789 --send --yes --pub <host>.substack
 ```
 
 The second command acts on the already-published post; it does not create
-another post. For translated posts, readers are shown the custom edition
-matching their device language when available.
+another post. For translated posts, this is also what **activates** language
+editions pushed after publication — readers are then shown the custom edition
+matching their device language (see `docs/TRANSLATIONS.md`).
 
 ### Edit a published post (read side `edit`)
 
@@ -252,7 +275,7 @@ node bin/substack.js edit <handle> <slug|id> --body-file new.md --no-publish # u
 | Rule | Why |
 | ---- | --- |
 | `create` never publishes | drafts stay private until you say so |
-| `translate` never republishes | editions on published posts stay drafts |
+| `translate` never republishes | pushing an edition never touches the live post — activation is a separate `publish --no-send` |
 | `publish` requires `--yes` | irreversible |
 | default is `--no-send` (silent) | `--send` emails all subscribers, irreversibly |
 | sync requires `--yes` to apply | `--dry-run` previews first |
@@ -323,6 +346,7 @@ All reverse-engineered knowledge about Substack's internal API lives in `docs/`:
 - `LIMITS.md` — rate limits (~60 req/min) and size limits
 - `REPLIES_API.md` — notes replies
 - `EXPORT_SCHEMA.md` — the standard export format
+- `TRANSLATIONS.md` — language editions: model, API, activation, verification
 
 ## Idempotency
 
